@@ -1,0 +1,6 @@
+name = "event-photo-email-worker"
+main = "email-worker.ts"
+compatibility_date = "2026-11-24"
+
+[secrets]
+required = ["INGEST_URL", "INGEST_SECRET"]

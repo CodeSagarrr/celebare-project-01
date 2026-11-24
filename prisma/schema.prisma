@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OrderStatus { 
+  PENDING 
+  PAID 
+  EXPIRED 
+}
+
+enum PaymentStatus { 
+  MATCHED 
+  REJECTED 
+  DUPLICATE 
+  LATE 
+  UNMATCHED 
+}
+
+
+// Bank 
+model Bank {
+  code          String         @id        // "HDFC", "SBI"
+  name          String
+  senderDomain  String                    // allowlist
+  parserKey     String                    // which parser to use
+  photographers Photographer[]
+}
+
+model Photographer {
+  id           String    @id @unique
+  name         String
+  upiId        String
+  bankCode     String
+  bank         Bank      @relation(fields: [bankCode], references: [code])
+  inboxAddress String    @unique          // pg_ab12@yourdomain.com
+  createdAt    DateTime  @default(now())
+  events       Event[]
+  orders       Order[]
+  payments     Payment[]
+}
+
+
+model Event {
+  id             String       @id @default(cuid())
+  photographerId String
+  photographer   Photographer @relation(fields: [photographerId], references: [id])
+  name           String
+  pricePaise     Int                      // price per photo
+  photos         Photo[]
+  orders         Order[]
+}
+
+model Photo {
+  id         String       @id @default(cuid())
+  eventId    String
+  event      Event        @relation(fields: [eventId], references: [id])
+  storageKey String                       // file path in storage
+  orderPhotos OrderPhoto[]
+}
+
+model Order {
+  id             String       @id @default(cuid())
+  photographerId String
+  photographer   Photographer @relation(fields: [photographerId], references: [id])
+  eventId        String
+  event          Event        @relation(fields: [eventId], references: [id])
+  amountPaise    Int                      // unique-paise amount
+  status         OrderStatus  @default(PENDING)
+  expiresAt      DateTime                 // createdAt + 5 min
+  paidAt         DateTime?
+  createdAt      DateTime     @default(now())
+  photos         OrderPhoto[]
+  payment        Payment?
+
+  @@index([photographerId, status, amountPaise])
+}
+
+model OrderPhoto {
+  orderId String
+  photoId String
+  order   Order @relation(fields: [orderId], references: [id])
+  photo   Photo @relation(fields: [photoId], references: [id])
+  @@id([orderId, photoId])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  utr            String?       @unique    // blocks duplicates
+  photographerId String?
+  photographer   Photographer? @relation(fields: [photographerId], references: [id])
+  orderId        String?       @unique    // one payment per order
+  order          Order?        @relation(fields: [orderId], references: [id])
+  amountPaise    Int?
+  txnTime        DateTime?                // time inside the email
+  status         PaymentStatus
+  reason         String?                  // why rejected
+  rawEmail       String                   // keep for audit
+  receivedAt     DateTime      @default(now())
+}
