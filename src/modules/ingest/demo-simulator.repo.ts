@@ -1,4 +1,5 @@
 import { db } from "@/src/shared/db";
+import { OrderStatus } from "@/src/app/generated/prisma/enums";
 
 export function findDemoPhotographer(photographerId: "photo-asha" | "photo-rohan") {
   return db.photographer.findFirst({
@@ -16,6 +17,18 @@ export function findDemoPhotographer(photographerId: "photo-asha" | "photo-rohan
         select: { id: true, photos: { take: 1, select: { id: true } } },
       },
     },
+  });
+}
+
+export function findLatestPendingOrder() {
+  return db.order.findFirst({
+    where: {
+      photographerId: { in: ["photo-asha", "photo-rohan"] },
+      status: OrderStatus.PENDING,
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, photographerId: true, amountPaise: true, expiresAt: true },
   });
 }
 

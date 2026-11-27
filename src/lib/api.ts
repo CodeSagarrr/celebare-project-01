@@ -7,6 +7,8 @@ export type OrderSnapshot = {
   qr: string;
 };
 
+export type PaidPhotoLink = { photoId: string; viewUrl: string; downloadUrl: string };
+
 export async function createOrder(input: { eventId: string; photoIds: string[] }): Promise<OrderSnapshot> {
   const response = await fetch("/api/orders", {
     method: "POST",
@@ -28,13 +30,13 @@ export async function getOrder(orderId: string): Promise<OrderSnapshot> {
 // Requests paid-photo view and download links after the order is confirmed.
 export async function getPhotoLinks(
   orderId: string,
-): Promise<Array<{ photoId: string; viewUrl: string; downloadUrl: string }>> {
+): Promise<PaidPhotoLink[]> {
   const response = await fetch(`/api/orders/${orderId}/photos`, {
     cache: "no-store",
   });
   if (!response.ok) throw new Error("Could not load paid photos");
   const result = (await response.json()) as {
-    photos: Array<{ photoId: string; viewUrl: string; downloadUrl: string }>;
+    photos: PaidPhotoLink[];
   };
   return result.photos;
 }

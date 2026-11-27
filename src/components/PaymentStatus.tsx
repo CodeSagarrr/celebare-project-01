@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import { Badge } from "@/src/components/ui/badge";
-import { getOrder, getPhotoLinks, type OrderSnapshot } from "@/src/lib/api";
+import { getOrder, getPhotoLinks, type OrderSnapshot, type PaidPhotoLink } from "@/src/lib/api";
 import { Countdown } from "./Countdown";
 import Link from "next/link";
 
 // Polls the server so paid photos appear after email matching or after refresh.
-export function PaymentStatus({ initialOrder, startAgainHref = "/" }: { initialOrder: OrderSnapshot; startAgainHref?: string }) {
+export function PaymentStatus({ initialOrder, startAgainHref = "/", onPaidPhotos }: {
+  initialOrder: OrderSnapshot;
+  startAgainHref?: string;
+  onPaidPhotos?: (photos: PaidPhotoLink[]) => void;
+}) {
   const orderQuery = useQuery({
     queryKey: ["order", initialOrder.orderId],
     queryFn: () => getOrder(initialOrder.orderId),
@@ -26,6 +30,10 @@ export function PaymentStatus({ initialOrder, startAgainHref = "/" }: { initialO
   });
   const photos = photosQuery.data ?? [];
   const message = orderQuery.error?.message ?? photosQuery.error?.message ?? "";
+
+  useEffect(() => {
+    if (photosQuery.data) onPaidPhotos?.(photosQuery.data);
+  }, [onPaidPhotos, photosQuery.data]);
 
   const rupees = `${Math.floor(order.amountPaise / 100)}.${String(order.amountPaise % 100).padStart(2, "0")}`;
   return (

@@ -14,7 +14,7 @@ async function runCase(demoCase: DemoCase) {
   const photographerId = ["duplicate", "wrong-amount", "wrong-receiver"].includes(demoCase)
     ? "photo-rohan"
     : "photo-asha";
-  const result = await simulatePayment(photographerId, demoCase);
+  const result = await simulatePayment(photographerId, demoCase, true);
   console.log(JSON.stringify(result, null, 2));
 }
 
