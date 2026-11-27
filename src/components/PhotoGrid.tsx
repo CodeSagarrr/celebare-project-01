@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 type Photo = { id: string; storageKey: string };
@@ -17,7 +17,7 @@ export function PhotoGrid({ photographers }: { photographers: Photographer[] }) 
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const totalPaise = useMemo(() => (event?.pricePaise ?? 0) * selected.length, [event, selected.length]);
+  const totalPaise = (event?.pricePaise ?? 0) * selected.length;
 
   // Clears photo selections whenever the guest changes the event.
   function choosePhotographer(id: string) {

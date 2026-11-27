@@ -12,71 +12,76 @@ datasource db {
   provider = "postgresql"
 }
 
-enum OrderStatus { 
-  PENDING 
-  PAID 
-  EXPIRED 
+enum OrderStatus {
+  PENDING
+  PAID
+  EXPIRED
 }
 
-enum PaymentStatus { 
-  MATCHED 
-  REJECTED 
-  DUPLICATE 
-  LATE 
-  UNMATCHED 
+enum PaymentStatus {
+  MATCHED
+  REJECTED
+  DUPLICATE
+  LATE
+  UNMATCHED
 }
-
 
 // Bank 
 model Bank {
-  code          String         @id        // "HDFC", "SBI"
+  code          String         @id // "HDFC", "SBI"
   name          String
-  senderDomain  String                    // allowlist
-  parserKey     String                    // which parser to use
+  senderDomain  String // allowlist
+  parserKey     String // which parser to use
   photographers Photographer[]
 }
 
 model Photographer {
   id           String    @id @unique
   name         String
+  email        String    @unique
+  passwordHash String
+  slug         String    @unique
   upiId        String
   bankCode     String
   bank         Bank      @relation(fields: [bankCode], references: [code])
-  inboxAddress String    @unique          // pg_ab12@yourdomain.com
+  inboxAddress String    @unique // pg_ab12@yourdomain.com
   createdAt    DateTime  @default(now())
   events       Event[]
   orders       Order[]
   payments     Payment[]
 }
 
-
 model Event {
   id             String       @id @default(cuid())
   photographerId String
   photographer   Photographer @relation(fields: [photographerId], references: [id])
   name           String
-  pricePaise     Int                      // price per photo
+  slug           String       @unique
+  eventDate      DateTime?
+  pricePaise     Int // price per photo
   photos         Photo[]
   orders         Order[]
 }
 
 model Photo {
-  id         String       @id @default(cuid())
-  eventId    String
-  event      Event        @relation(fields: [eventId], references: [id])
-  storageKey String                       // file path in storage
-  orderPhotos OrderPhoto[]
+  id               String       @id @default(cuid())
+  eventId          String
+  event            Event        @relation(fields: [eventId], references: [id])
+  storageKey       String // file path in storage
+  originalPublicId String?
+  previewUrl       String?
+  orderPhotos      OrderPhoto[]
 }
 
 model Order {
-  id             String       @id @default(cuid())
+  id             String       @id
   photographerId String
   photographer   Photographer @relation(fields: [photographerId], references: [id])
   eventId        String
   event          Event        @relation(fields: [eventId], references: [id])
-  amountPaise    Int                      // unique-paise amount
+  amountPaise    Int // unique-paise amount
   status         OrderStatus  @default(PENDING)
-  expiresAt      DateTime                 // createdAt + 5 min
+  expiresAt      DateTime // createdAt + 5 min
   paidAt         DateTime?
   createdAt      DateTime     @default(now())
   photos         OrderPhoto[]
@@ -88,22 +93,23 @@ model Order {
 model OrderPhoto {
   orderId String
   photoId String
-  order   Order @relation(fields: [orderId], references: [id])
-  photo   Photo @relation(fields: [photoId], references: [id])
+  order   Order  @relation(fields: [orderId], references: [id])
+  photo   Photo  @relation(fields: [photoId], references: [id])
+
   @@id([orderId, photoId])
 }
 
 model Payment {
   id             String        @id @default(cuid())
-  utr            String?       @unique    // blocks duplicates
+  utr            String?       @unique // blocks duplicates
   photographerId String?
   photographer   Photographer? @relation(fields: [photographerId], references: [id])
-  orderId        String?       @unique    // one payment per order
+  orderId        String?       @unique // one payment per order
   order          Order?        @relation(fields: [orderId], references: [id])
   amountPaise    Int?
-  txnTime        DateTime?                // time inside the email
+  txnTime        DateTime? // time inside the email
   status         PaymentStatus
-  reason         String?                  // why rejected
-  rawEmail       String                   // keep for audit
+  reason         String? // why rejected
+  rawEmail       String // keep for audit
   receivedAt     DateTime      @default(now())
 }

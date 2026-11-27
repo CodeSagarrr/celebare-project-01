@@ -7,6 +7,17 @@ export type OrderSnapshot = {
   qr: string;
 };
 
+export async function createOrder(input: { eventId: string; photoIds: string[] }): Promise<OrderSnapshot> {
+  const response = await fetch("/api/orders", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  const result = await response.json() as OrderSnapshot & { error?: string };
+  if (!response.ok) throw new Error(result.error ?? "Could not create order");
+  return { ...result, expiresAt: new Date(result.expiresAt).toISOString(), status: "PENDING" };
+}
+
 // Loads the current server-owned order state for checkout polling.
 export async function getOrder(orderId: string): Promise<OrderSnapshot> {
   const response = await fetch(`/api/orders/${orderId}`, { cache: "no-store" });
@@ -14,10 +25,16 @@ export async function getOrder(orderId: string): Promise<OrderSnapshot> {
   return response.json() as Promise<OrderSnapshot>;
 }
 
-// Requests signed photo links after the server confirms the order is paid.
-export async function getPhotoLinks(orderId: string): Promise<Array<{ photoId: string; url: string }>> {
-  const response = await fetch(`/api/orders/${orderId}/photos`, { cache: "no-store" });
+// Requests paid-photo view and download links after the order is confirmed.
+export async function getPhotoLinks(
+  orderId: string,
+): Promise<Array<{ photoId: string; viewUrl: string; downloadUrl: string }>> {
+  const response = await fetch(`/api/orders/${orderId}/photos`, {
+    cache: "no-store",
+  });
   if (!response.ok) throw new Error("Could not load paid photos");
-  const result = await response.json() as { photos: Array<{ photoId: string; url: string }> };
+  const result = (await response.json()) as {
+    photos: Array<{ photoId: string; viewUrl: string; downloadUrl: string }>;
+  };
   return result.photos;
 }

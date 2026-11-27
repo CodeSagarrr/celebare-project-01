@@ -1,42 +1,39 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { db } from "@/src/lib/db";
-
-const eventInput = z.object({
-  photographerId: z.string().min(1),
-  name: z.string().trim().min(1),
-  pricePaise: z.number().int().positive(),
-});
+import * as eventService from "@/src/modules/events/event.service";
+import { auth } from "@/src/auth";
+import { createEventSchema } from "@/src/modules/events/event.schema";
+import { Prisma } from "@/src/app/generated/prisma/client";
 
 // Creates an event with an integer paise price for each photo.
 export async function POST(request: Request) {
-  const parsed = eventInput.safeParse(await request.json().catch(() => null));
-  if (!parsed.success)
-    return NextResponse.json({ error: "Invalid input" }, { status: 400 });
-  try {
-    const event = await db.event.create({ data: parsed.data });
-    return NextResponse.json(event, { status: 201 });
-  } catch {
-    return NextResponse.json(
-      { error: "Photographer not found" },
-      { status: 404 },
-    );
+  const session = await auth();
+  if (!session?.user.photographerId)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const parsed = createEventSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+  let result;
+  try { result = await eventService.createEvent(parsed.data, session.user.photographerId); }
+  catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")
+      return NextResponse.json({ error: "Event already exists" }, { status: 409 });
+    return NextResponse.json({ error: "Could not create event" }, { status: 500 });
   }
+  if ("error" in result)
+    return NextResponse.json(
+      { error: result.error },
+      { status: result.status },
+    );
+  return NextResponse.json(result.event, { status: result.status });
 }
 
 // Lists events belonging to the requested photographer only.
 export async function GET(request: Request) {
-  const photographerId = new URL(request.url).searchParams.get(
-    "photographerId",
+  void request;
+  const session = await auth();
+  if (!session?.user.photographerId)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const events = await eventService.listPhotographerEvents(
+    session.user.photographerId,
   );
-  if (!photographerId)
-    return NextResponse.json(
-      { error: "photographerId is required" },
-      { status: 400 },
-    );
-  const events = await db.event.findMany({
-    where: { photographerId },
-    include: { photos: { select: { id: true, storageKey: true } } },
-  });
   return NextResponse.json(events);
 }
