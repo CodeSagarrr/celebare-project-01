@@ -5,6 +5,7 @@ import { EventManager } from "@/src/components/EventManager";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { SiteHeader } from "@/src/components/features/site-header";
 
 async function EventWorkspace() {
   await connection();
@@ -21,7 +22,7 @@ function EventWorkspaceFallback() {
 export default function PhotographerEventsPage() {
   return (
     <main className="page-shell narrow">
-      <header className="site-header"><Link className="brand" href="/">frame<span>pay</span></Link><Link href="/dashboard">Dashboard</Link></header>
+      <SiteHeader><Link href="/dashboard">Dashboard</Link></SiteHeader>
       <section className="hero compact"><p className="eyebrow">Photographer workspace</p><h1>Events and photos</h1><p className="muted">Create an event, then upload JPEG, PNG, or WebP photos up to 10 MB each.</p></section>
       <Suspense fallback={<EventWorkspaceFallback />}><EventWorkspace /></Suspense>
     </main>

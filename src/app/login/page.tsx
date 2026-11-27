@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { SiteHeader } from "@/src/components/features/site-header";
 
 async function LoginContent() {
   await connection();
@@ -27,11 +28,7 @@ function LoginFallback() {
 export default function LoginPage() {
   return (
     <main className="page-shell narrow">
-      <header className="site-header">
-        <Link className="brand" href="/">
-          frame<span>pay</span>
-        </Link>
-      </header>
+      <SiteHeader><Link href="/">Browse galleries</Link></SiteHeader>
       <section className="hero compact">
         <p className="eyebrow">Photographer account</p>
         <h1>Log in or sign up</h1>

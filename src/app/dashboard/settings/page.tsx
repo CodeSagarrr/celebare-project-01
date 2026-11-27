@@ -6,6 +6,7 @@ import Link from "next/link";
 import { SignOutButton } from "@/src/components/SignOutButton";
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { SiteHeader } from "@/src/components/features/site-header";
 
 async function SettingsContent() {
   await connection();
@@ -15,15 +16,7 @@ async function SettingsContent() {
   if (!settings) redirect("/login");
   return (
     <main className="page-shell narrow">
-      <header className="site-header">
-        <Link className="brand" href="/">
-          frame<span>pay</span>
-        </Link>
-        <nav>
-          <Link href="/dashboard">Dashboard</Link>
-          <SignOutButton />
-        </nav>
-      </header>
+      <SiteHeader><Link href="/dashboard">Dashboard</Link><SignOutButton /></SiteHeader>
       <section className="hero compact">
         <p className="eyebrow">Photographer account</p>
         <h1>Settings</h1>

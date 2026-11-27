@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { Suspense } from "react";
 import { auth } from "../../auth";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { connection } from "next/server";
+import { SiteHeader } from "@/src/components/features/site-header";
 
 async function DashboardGuard({ children }: { children: ReactNode }) {
   await connection();
@@ -15,9 +15,7 @@ async function DashboardGuard({ children }: { children: ReactNode }) {
 function DashboardFallback() {
   return (
     <main className="page-shell" aria-busy="true">
-      <header className="site-header">
-        <Link className="brand" href="/">frame<span>pay</span></Link>
-      </header>
+      <SiteHeader />
       <section className="hero compact" aria-live="polite">
         <p className="eyebrow">Photographer workspace</p>
         <h1>Loading dashboard</h1>

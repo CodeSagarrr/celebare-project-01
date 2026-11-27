@@ -7,6 +7,7 @@ import { SignOutButton } from "@/src/components/SignOutButton";
 import { OrderStatus, PaymentStatus } from "@/src/app/generated/prisma/enums";
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { SiteHeader } from "@/src/components/features/site-header";
 
 export const instant = false;
 
@@ -33,7 +34,7 @@ async function DashboardContent({ searchParams }: { searchParams: DashboardSearc
   const events = await listDashboardEvents(photographerId);
   return <main className="page-shell">
     <DashboardRefresh />
-    <header className="site-header"><Link className="brand" href="/">frame<span>pay</span></Link><nav><Link href="/dashboard/events">Events</Link><Link href="/dashboard/settings">Settings</Link><Link href="/">Guest view</Link><SignOutButton /></nav></header>
+    <SiteHeader><Link href="/dashboard/events">Events</Link><Link href="/dashboard/settings">Settings</Link><Link href="/">Guest view</Link><SignOutButton /></SiteHeader>
     <section className="hero compact"><p className="eyebrow">Showcase monitor</p><h1>Orders &amp; payments</h1><p className="muted">Verification outcomes and any reason are visible here.</p></section>
     <form className="controls" action="/dashboard" method="get">
       <label>Event<select name="eventId" defaultValue={query.eventId ?? ""}><option value="">All events</option>{events.map((event) => <option key={event.id} value={event.id}>{event.name}</option>)}</select></label>

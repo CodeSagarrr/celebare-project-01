@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { PaymentDialog } from "@/src/components/features/PaymentDialog";
 import { getCheckout } from "@/src/modules/orders/order.service";
 import Link from "next/link";
+import { SiteHeader } from "@/src/components/features/site-header";
 
 export const instant = false;
 
@@ -16,9 +17,9 @@ export default async function PayPage({
   if (!checkout) notFound();
   return (
     <main className="page-shell narrow">
-      <Link className="back-link" href="/">
+      <SiteHeader><Link href="/">
         ← Back to photos
-      </Link>
+      </Link></SiteHeader>
       <PaymentDialog
         order={{
           orderId,
